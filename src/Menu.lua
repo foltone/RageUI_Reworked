@@ -25,6 +25,7 @@ function RageUI.CreateMenu(Title, Subtitle, X, Y, TextureDictionary, TextureName
 	Menu.InstructionalButtons = {}
 
 	Menu.Display.Header = true;
+	Menu.Display.Glare = true;
 	Menu.Display.Subtitle = true;
 	Menu.Display.Background = true;
 	Menu.Display.Navigation = true;
@@ -78,6 +79,13 @@ function RageUI.CreateMenu(Title, Subtitle, X, Y, TextureDictionary, TextureName
 			end
 		end
 	end)
+
+	Citizen.CreateThread(function()
+        local ScaleformMovie = RequestScaleformMovie("MP_MENU_GLARE")
+        while not HasScaleformMovieLoaded(ScaleformMovie) do
+            Citizen.Wait(0)
+        end
+    end)
 
 	return setmetatable(Menu, RageUIMenus)
 end

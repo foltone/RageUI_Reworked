@@ -3,6 +3,7 @@
 --- @version 1.0.0
 --- created at [24/05/2021 10:02]
 ---
+print('^1Script by^7 Foltone#6290') 
 
 RageUI = {};
 
@@ -300,25 +301,66 @@ function RageUI.CloseAll()
     ResetScriptGfxAlign()
 end
 
+function RageUI.SetScaleformParams(scaleform, data)
+    data = data or {}
+    for k, v in pairs(data) do
+        PushScaleformMovieFunction(scaleform, v.name)
+        if v.param then
+            for _, par in pairs(v.param) do
+                if math.type(par) == "integer" then
+                    PushScaleformMovieFunctionParameterInt(par)
+                elseif type(par) == "boolean" then
+                    PushScaleformMovieFunctionParameterBool(par)
+                elseif math.type(par) == "float" then
+                    PushScaleformMovieFunctionParameterFloat(par)
+                elseif type(par) == "string" then
+                    PushScaleformMovieFunctionParameterString(par)
+                end
+            end
+        end
+        if v.func then
+            v.func()
+        end
+        PopScaleformMovieFunctionVoid()
+    end
+end
+
 function RageUI.Banner()
     local CurrentMenu = RageUI.CurrentMenu
-    if (CurrentMenu.Display.Header) then
-        RageUI.ItemsSafeZone(CurrentMenu)
-        if CurrentMenu.Sprite ~= nil then
-            if CurrentMenu.Sprite.Dictionary ~= nil then
-                if CurrentMenu.Sprite.Dictionary == "commonmenu" then
-                    Graphics.Sprite(CurrentMenu.Sprite.Dictionary, CurrentMenu.Sprite.Texture, CurrentMenu.X, CurrentMenu.Y, RageUI.Settings.Items.Title.Background.Width + CurrentMenu.WidthOffset, RageUI.Settings.Items.Title.Background.Height, CurrentMenu.Sprite.Color.R, CurrentMenu.Sprite.Color.G, CurrentMenu.Sprite.Color.B, CurrentMenu.Sprite.Color.A)
+    if CurrentMenu ~= nil then
+        if CurrentMenu() and (CurrentMenu.Display.Header) then
+            RageUI.ItemsSafeZone(CurrentMenu)
+            if CurrentMenu.Sprite ~= nil then
+                if CurrentMenu.Sprite.Dictionary ~= nil then
+                    if CurrentMenu.Sprite.Dictionary == "commonmenu" then
+                        RenderSprite(CurrentMenu.Sprite.Dictionary, CurrentMenu.Sprite.Texture, CurrentMenu.X, CurrentMenu.Y, RageUI.Settings.Items.Title.Background.Width + CurrentMenu.WidthOffset, RageUI.Settings.Items.Title.Background.Height, CurrentMenu.Sprite.Color.R,CurrentMenu.Sprite.Color.G,CurrentMenu.Sprite.Color.B,CurrentMenu.Sprite.Color.A)
+                    else
+                        RenderSprite(CurrentMenu.Sprite.Dictionary, CurrentMenu.Sprite.Texture, CurrentMenu.X, CurrentMenu.Y, RageUI.Settings.Items.Title.Background.Width + CurrentMenu.WidthOffset, RageUI.Settings.Items.Title.Background.Height, nil)
+                    end
                 else
-                    Graphics.Sprite(CurrentMenu.Sprite.Dictionary, CurrentMenu.Sprite.Texture, CurrentMenu.X, CurrentMenu.Y, RageUI.Settings.Items.Title.Background.Width + CurrentMenu.WidthOffset, RageUI.Settings.Items.Title.Background.Height, nil)
+                    RenderRectangle(CurrentMenu.X, CurrentMenu.Y, RageUI.Settings.Items.Title.Background.Width + CurrentMenu.WidthOffset, RageUI.Settings.Items.Title.Background.Height, CurrentMenu.Rectangle.R, CurrentMenu.Rectangle.G, CurrentMenu.Rectangle.B, CurrentMenu.Rectangle.A)
                 end
             else
-                Graphics.Rectangle(CurrentMenu.X, CurrentMenu.Y, RageUI.Settings.Items.Title.Background.Width + CurrentMenu.WidthOffset, RageUI.Settings.Items.Title.Background.Height, CurrentMenu.Rectangle.R, CurrentMenu.Rectangle.G, CurrentMenu.Rectangle.B, CurrentMenu.Rectangle.A)
+                RenderRectangle(CurrentMenu.X, CurrentMenu.Y, RageUI.Settings.Items.Title.Background.Width + CurrentMenu.WidthOffset, RageUI.Settings.Items.Title.Background.Height, CurrentMenu.Rectangle.R, CurrentMenu.Rectangle.G, CurrentMenu.Rectangle.B, CurrentMenu.Rectangle.A)
             end
-        else
-            Graphics.Rectangle(CurrentMenu.X, CurrentMenu.Y, RageUI.Settings.Items.Title.Background.Width + CurrentMenu.WidthOffset, RageUI.Settings.Items.Title.Background.Height, CurrentMenu.Rectangle.R, CurrentMenu.Rectangle.G, CurrentMenu.Rectangle.B, CurrentMenu.Rectangle.A)
+            if (CurrentMenu.Display.Glare) then
+                local ScaleformMovie = RequestScaleformMovie("MP_MENU_GLARE")
+                ---@type number
+                local Glarewidth = RageUI.Settings.Items.Title.Background.Width
+                ---@type number
+                local Glareheight = RageUI.Settings.Items.Title.Background.Height
+                ---@type number
+                local GlareX = CurrentMenu.X / 1920 + (CurrentMenu.SafeZoneSize.X / (64.399 - (CurrentMenu.WidthOffset * 0.065731)))
+                ---@type number
+                local GlareY = CurrentMenu.Y / 1080 + CurrentMenu.SafeZoneSize.Y / 33.195020746888
+                RageUI.SetScaleformParams(ScaleformMovie, {
+                    { name = "SET_DATA_SLOT", param = { GetGameplayCamRelativeHeading() } }
+                })
+                DrawScaleformMovie(ScaleformMovie, GlareX, GlareY, Glarewidth / 430, Glareheight / 100, 255, 255, 255, 255, 0)
+            end
+            RenderText(CurrentMenu.Title, CurrentMenu.X + RageUI.Settings.Items.Title.Text.X + (CurrentMenu.WidthOffset / 2), CurrentMenu.Y + RageUI.Settings.Items.Title.Text.Y, CurrentMenu.TitleFont, CurrentMenu.TitleScale, 255, 255, 255, 255, 1)
+            RageUI.ItemOffset = RageUI.ItemOffset + RageUI.Settings.Items.Title.Background.Height
         end
-        Graphics.Text(CurrentMenu.Title, CurrentMenu.X + RageUI.Settings.Items.Title.Text.X + (CurrentMenu.WidthOffset / 2), CurrentMenu.Y + RageUI.Settings.Items.Title.Text.Y, CurrentMenu.TitleFont, CurrentMenu.TitleScale, 255, 255, 255, 255, 1)
-        RageUI.ItemOffset = RageUI.ItemOffset + RageUI.Settings.Items.Title.Background.Height
     end
 end
 
@@ -357,78 +399,84 @@ end
 
 function RageUI.Background()
     local CurrentMenu = RageUI.CurrentMenu;
-    if (CurrentMenu.Display.Background) then
-        RageUI.ItemsSafeZone(CurrentMenu)
-        SetScriptGfxDrawOrder(0)
-        Graphics.Sprite(RageUI.Settings.Items.Background.Dictionary, RageUI.Settings.Items.Background.Texture, CurrentMenu.X, CurrentMenu.Y + RageUI.Settings.Items.Background.Y + CurrentMenu.SubtitleHeight, RageUI.Settings.Items.Background.Width + CurrentMenu.WidthOffset, RageUI.ItemOffset, 0, 0, 0, 0, 255)
-        SetScriptGfxDrawOrder(1)
+    if (CurrentMenu ~= nil) then
+        if (CurrentMenu.Display.Background) then
+            RageUI.ItemsSafeZone(CurrentMenu)
+            SetScriptGfxDrawOrder(0)
+            Graphics.Sprite(RageUI.Settings.Items.Background.Dictionary, RageUI.Settings.Items.Background.Texture, CurrentMenu.X, CurrentMenu.Y + RageUI.Settings.Items.Background.Y + CurrentMenu.SubtitleHeight, RageUI.Settings.Items.Background.Width + CurrentMenu.WidthOffset, RageUI.ItemOffset, 0, 0, 0, 0, 255)
+            SetScriptGfxDrawOrder(1)
+        end
     end
 end
 
 function RageUI.Description()
     local CurrentMenu = RageUI.CurrentMenu;
     local Description = RageUI.Settings.Items.Description;
-    if CurrentMenu.Description ~= nil then
-        RageUI.ItemsSafeZone(CurrentMenu)
-        Graphics.Rectangle(CurrentMenu.X, CurrentMenu.Y + Description.Bar.Y + CurrentMenu.SubtitleHeight + RageUI.ItemOffset, Description.Bar.Width + CurrentMenu.WidthOffset, Description.Bar.Height, 0, 0, 0, 255)
-        Graphics.Sprite(Description.Background.Dictionary, Description.Background.Texture, CurrentMenu.X, CurrentMenu.Y + Description.Background.Y + CurrentMenu.SubtitleHeight + RageUI.ItemOffset, Description.Background.Width + CurrentMenu.WidthOffset, CurrentMenu.DescriptionHeight, 0, 0, 0, 255)
-        Graphics.Text(CurrentMenu.Description, CurrentMenu.X + Description.Text.X, CurrentMenu.Y + Description.Text.Y + CurrentMenu.SubtitleHeight + RageUI.ItemOffset, 0, Description.Text.Scale, 255, 255, 255, 255, nil, false, false, Description.Background.Width + CurrentMenu.WidthOffset - 8.0)
-        RageUI.ItemOffset = RageUI.ItemOffset + CurrentMenu.DescriptionHeight + Description.Bar.Y
+    if (CurrentMenu ~= nil) then
+        if CurrentMenu.Description ~= nil then
+            RageUI.ItemsSafeZone(CurrentMenu)
+            Graphics.Rectangle(CurrentMenu.X, CurrentMenu.Y + Description.Bar.Y + CurrentMenu.SubtitleHeight + RageUI.ItemOffset, Description.Bar.Width + CurrentMenu.WidthOffset, Description.Bar.Height, 0, 0, 0, 255)
+            Graphics.Sprite(Description.Background.Dictionary, Description.Background.Texture, CurrentMenu.X, CurrentMenu.Y + Description.Background.Y + CurrentMenu.SubtitleHeight + RageUI.ItemOffset, Description.Background.Width + CurrentMenu.WidthOffset, CurrentMenu.DescriptionHeight, 0, 0, 0, 255)
+            Graphics.Text(CurrentMenu.Description, CurrentMenu.X + Description.Text.X, CurrentMenu.Y + Description.Text.Y + CurrentMenu.SubtitleHeight + RageUI.ItemOffset, 0, Description.Text.Scale, 255, 255, 255, 255, nil, false, false, Description.Background.Width + CurrentMenu.WidthOffset - 8.0)
+            RageUI.ItemOffset = RageUI.ItemOffset + CurrentMenu.DescriptionHeight + Description.Bar.Y
+        end
     end
 end
 
 function RageUI.Render()
     local CurrentMenu = RageUI.CurrentMenu;
-    if CurrentMenu.Safezone then
-        ResetScriptGfxAlign()
-    end
-
-    if (CurrentMenu.Display.InstructionalButton) then
-        if not CurrentMenu.InitScaleform then
-            CurrentMenu:UpdateInstructionalButtons(true)
-            CurrentMenu.InitScaleform = true
+    if (CurrentMenu ~= nil) then
+        if CurrentMenu.Safezone then
+            ResetScriptGfxAlign()
         end
-        DrawScaleformMovieFullscreen(CurrentMenu.InstructionalScaleform, 255, 255, 255, 255, 0)
-    end
-    CurrentMenu.Options = RageUI.Options
-    CurrentMenu.SafeZoneSize = nil
-    RageUI.Controls()
-    RageUI.Options = 0
-    RageUI.StatisticPanelCount = 0
-    RageUI.ItemOffset = 0
-    if CurrentMenu.Controls.Back.Enabled then
-        if CurrentMenu.Controls.Back.Pressed and CurrentMenu.Closable then
-            CurrentMenu.Controls.Back.Pressed = false
 
-            Audio.PlaySound(RageUI.Settings.Audio.Back.audioName, RageUI.Settings.Audio.Back.audioRef)
-
-            if CurrentMenu.Closed ~= nil then
-                collectgarbage()
-                CurrentMenu.Closed()
+        if (CurrentMenu.Display.InstructionalButton) then
+            if not CurrentMenu.InitScaleform then
+                CurrentMenu:UpdateInstructionalButtons(true)
+                CurrentMenu.InitScaleform = true
             end
+            DrawScaleformMovieFullscreen(CurrentMenu.InstructionalScaleform, 255, 255, 255, 255, 0)
+        end
+        CurrentMenu.Options = RageUI.Options
+        CurrentMenu.SafeZoneSize = nil
+        RageUI.Controls()
+        RageUI.Options = 0
+        RageUI.StatisticPanelCount = 0
+        RageUI.ItemOffset = 0
+        if CurrentMenu.Controls.Back.Enabled then
+            if CurrentMenu.Controls.Back.Pressed and CurrentMenu.Closable then
+                CurrentMenu.Controls.Back.Pressed = false
 
-            if CurrentMenu.Parent ~= nil then
-                if CurrentMenu.Parent() then
-                    RageUI.NextMenu = CurrentMenu.Parent
+                Audio.PlaySound(RageUI.Settings.Audio.Back.audioName, RageUI.Settings.Audio.Back.audioRef)
+
+                if CurrentMenu.Closed ~= nil then
+                    collectgarbage()
+                    CurrentMenu.Closed()
+                end
+
+                if CurrentMenu.Parent ~= nil then
+                    if CurrentMenu.Parent() then
+                        RageUI.NextMenu = CurrentMenu.Parent
+                    else
+                        RageUI.NextMenu = nil
+                        RageUI.Visible(CurrentMenu, false)
+                    end
                 else
                     RageUI.NextMenu = nil
                     RageUI.Visible(CurrentMenu, false)
                 end
-            else
-                RageUI.NextMenu = nil
-                RageUI.Visible(CurrentMenu, false)
+            elseif CurrentMenu.Controls.Back.Pressed and not CurrentMenu.Closable then
+                CurrentMenu.Controls.Back.Pressed = false
             end
-        elseif CurrentMenu.Controls.Back.Pressed and not CurrentMenu.Closable then
-            CurrentMenu.Controls.Back.Pressed = false
         end
-    end
-    if RageUI.NextMenu ~= nil then
-        if RageUI.NextMenu() then
-            RageUI.Visible(CurrentMenu, false)
-            RageUI.Visible(RageUI.NextMenu, true)
-            CurrentMenu.Controls.Select.Active = false
-            RageUI.NextMenu = nil
-            RageUI.LastControl = false
+        if RageUI.NextMenu ~= nil then
+            if RageUI.NextMenu() then
+                RageUI.Visible(CurrentMenu, false)
+                RageUI.Visible(RageUI.NextMenu, true)
+                CurrentMenu.Controls.Select.Active = false
+                RageUI.NextMenu = nil
+                RageUI.LastControl = false
+            end
         end
     end
 end
