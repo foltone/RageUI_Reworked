@@ -6,7 +6,7 @@ local Colour = {
     Header = { X = 215.5, Y = 15, Scale = 0.35 },
     Box = { X = 15, Y = 55, Width = 44.5, Height = 44.5 },
     SelectedRectangle = { X = 15, Y = 47, Width = 44.5, Height = 8 },
-    Seperator = { Text = "sur" }
+    Seperator = { Text = "of" }
 }
 
 ---ColourPanel
@@ -17,12 +17,13 @@ local Colour = {
 ---@param Callback function
 ---@return nil
 ---@public
-function Items:ColourPanel(Title, Colours, MinimumIndex, CurrentIndex, Actions, Index, Style)
-    local CurrentMenu = RageUI.CurrentMenu
-    if (CurrentMenu ~= nil) then
-        local Option = RageUI.Options + 1
-        if CurrentMenu.Pagination.Minimum <= Option and CurrentMenu.Pagination.Maximum >= Option then
-            local Active = CurrentMenu.Index == Option;
+function Items:ColourPanel(Title, Colours, MinimumIndex, CurrentIndex, Action, Index, Style)
+
+    ---@type table
+    local CurrentMenu = RageUI.CurrentMenu;
+
+    if CurrentMenu ~= nil then
+        if CurrentMenu() and (CurrentMenu.Index == Index) then
 
             ---@type number
             local Maximum = (#Colours > 9) and 9 or #Colours
@@ -48,7 +49,7 @@ function Items:ColourPanel(Title, Colours, MinimumIndex, CurrentIndex, Actions, 
             for Index = 1, Maximum do
                 RenderRectangle(CurrentMenu.X + Colour.Box.X + (Colour.Box.Width * (Index - 1)) + (CurrentMenu.WidthOffset / 2), CurrentMenu.Y + Colour.Box.Y + CurrentMenu.SubtitleHeight + RageUI.ItemOffset, Colour.Box.Width, Colour.Box.Height, table.unpack(Colours[MinimumIndex + Index - 1]))
             end
-            
+
             local ColourSeperator = {}
             if type(Style) == "table" then
                 if type(Style.Seperator) == "table" then
@@ -59,7 +60,7 @@ function Items:ColourPanel(Title, Colours, MinimumIndex, CurrentIndex, Actions, 
             else
                 ColourSeperator = Colour.Seperator
             end
-            
+
             RenderText((Title and Title or "") .. " (" .. CurrentIndex .. " " .. ColourSeperator.Text .. " " .. #Colours .. ")", CurrentMenu.X + RageUI.Settings.Panels.Grid.Text.Top.X + (CurrentMenu.WidthOffset / 2), CurrentMenu.Y + RageUI.Settings.Panels.Grid.Text.Top.Y + CurrentMenu.SubtitleHeight + RageUI.ItemOffset, 0, RageUI.Settings.Panels.Grid.Text.Top.Scale, 245, 245, 245, 255, 1)
 
             if Hovered or LeftArrowHovered or RightArrowHovered then
@@ -91,16 +92,19 @@ function Items:ColourPanel(Title, Colours, MinimumIndex, CurrentIndex, Actions, 
                             end
                         end
                     end
-                    Actions(MinimumIndex, CurrentIndex, Actions)
+
+                    if (Action.onColorChange ~= nil) then
+                        Action.onColorChange(MinimumIndex, CurrentIndex)
+                    end
                 end
             end
 
             RageUI.ItemOffset = RageUI.ItemOffset + Colour.Background.Height + Colour.Background.Y
 
             if (Hovered or LeftArrowHovered or RightArrowHovered) and RageUI.Settings.Controls.Click.Active then
-                Audio.PlaySound(RageUI.Settings.Audio.Select.audioName, RageUI.Settings.Audio.Select.audioRef)
+                local Audio = RageUI.Settings.Audio
+                RageUI.PlaySound(Audio[Audio.Use].Select.audioName, Audio[Audio.Use].Select.audioRef)
             end
         end
     end
-    RageUI.Options = RageUI.Options + 1
 end
