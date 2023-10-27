@@ -92,5 +92,4 @@ function Items:ColourPanel(Title, Colours, MinimumIndex, CurrentIndex, Actions, 
             end
         end
     end
-    RageUI.Options = RageUI.Options + 1
 end
